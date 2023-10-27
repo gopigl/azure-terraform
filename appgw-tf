@@ -1,0 +1,110 @@
+resource "azurerm_public_ip" "pip" {
+  for_each            = var.public_ips
+  name                = each.value.name
+  resource_group_name = var.rg_name
+  location            = var.location
+  sku                 = each.value.sku
+  allocation_method   = each.value.allocation
+}
+
+resource "azurerm_application_gateway" "appgw" {
+  name                   = var.appgw_name
+  resource_group_name    = var.rg_name
+  location               = var.location
+
+
+  sku {
+    name     = "Standard_v2"
+    tier     = "Standard_v2"
+    capacity = 2
+  }
+ 
+  gateway_ip_configuration {
+    name      = var.gateway_ip_config
+    subnet_id = azurerm_subnet.subnets[0].id
+  }
+
+  frontend_ip_configuration {
+    name                 = var.frontend_ip_config
+    public_ip_address_id = azurerm_public_ip.pip["pip1"].id
+  }
+
+  dynamic "frontend_port" {
+    for_each = var.frontend_ports
+
+    content {
+      name = frontend_port.value.name
+      port = frontend_port.value.http_port
+    }
+  }
+
+
+  dynamic "backend_address_pool" {
+    for_each = var.backend_address_pools
+    content {
+      name         = backend_address_pool.value.name
+      ip_addresses = backend_address_pool.value.ip_addresses
+      fqdns        = backend_address_pool.value.fqdns
+    }
+  }
+
+  dynamic "http_listener" {
+    for_each = var.http_listener
+
+    content {
+      name                           = http_listener.value.name
+      frontend_ip_configuration_name = var.frontend_ip_config
+      frontend_port_name             = var.frontend_ports["webserver-port"].name
+      protocol                       = http_listener.value.protocol
+    }
+  }
+
+  dynamic "backend_http_settings" {
+    for_each = var.backend_http_settings
+
+    content {
+      name                  = backend_http_settings.value.name
+      cookie_based_affinity = backend_http_settings.value.cookie_based_affinity
+      port                  = backend_http_settings.value.port
+      protocol              = backend_http_settings.value.protocol
+      request_timeout       = backend_http_settings.value.request_timeout
+    }
+  }
+
+  dynamic "request_routing_rule" {
+    for_each = var.request_routing_rules
+
+    content {
+      name             = request_routing_rule.value.name
+      rule_type        = request_routing_rule.value.rule_type
+      http_listener_name = var.http_listener["listener-1"].name
+      backend_address_pool_name =  var.backend_address_pools["pool1"].name
+      backend_http_settings_name = var.backend_http_settings["http-settings-1"].name
+      url_path_map_name          = var.url_path_map_name
+      
+    }
+  }
+
+   url_path_map {
+    name                               = var.url_path_map_name
+    default_redirect_configuration_name        = var.url_path_map_name
+
+    path_rule {
+      name                        = var.request_routing_rules["rule-2"].name
+      paths                       = ["/app1/*"] 
+      backend_address_pool_name   = var.backend_address_pools["pool1"].name
+      backend_http_settings_name  = var.backend_http_settings["http-settings-1"].name
+
+    }
+  }
+
+  redirect_configuration {
+    name                 = var.url_path_map_name
+    redirect_type        = "Permanent"
+    #target_listener_name = var.http_listener["listener-1"].name
+    target_url = "https://stacksimplify.com/azure-aks/azure-kubernetes-service-introduction/"
+    include_path         = true
+    include_query_string = true
+  }
+
+}
