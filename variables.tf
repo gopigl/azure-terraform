@@ -68,20 +68,84 @@ variable "profiles" {
 }
 
 ################# App Gateway #########################
-variable "application_gateways" {
-  description  = "The application gateway in azure works as layer 7 load balancer"
-  type  = map(object({
-    name  = string
+variable "public_ips" {
+  description = "A map of Azure Public IPs."
+  type        = map(object({
+    name       = string
+    sku        = string
+    allocation = string
   }))
-  default = {}
+  default = {}  # Default value is an empty map
 }
-variable "sku" {
-  type    = map(string)
-  description = "A mapping with the sku configuration of the App Gateway"
-  default     = {}
+
+variable "appgw_name" {
+  description  =  "Name of the Application Gateway"
+  type         = string
 }
-variable  "enable_http2" {
-  type    = bool
-  description = "Is HTTP2 Enabled on the application gateway resource?"
-  default   = false
+
+variable "gateway_ip_config" {
+  description  = "Name of the Gateway IP Config"
+  type         = string
+}
+
+variable "frontend_ip_config" {
+  description  = "Name of the Frontend IP Config"
+  type         = string
+}
+
+variable "frontend_ports" {
+  description = "A map of frontend ports."
+  type        = map(object({
+    name         = string
+    http_port    = number
+  }))
+  default = {}  # Default value is an empty map
+}
+
+variable "backend_address_pools" {
+  description = "A map of backend address pool configurations."
+  type        = map(object({
+    name          = string
+    ip_addresses  = list(string)
+    fqdns         = list(string)
+  }))
+}
+
+variable "http_listener" {
+  description = "A map of HTTP listener configurations."
+  type        = map(object({
+    name                  = string
+    protocol              = string
+  }))
+}
+
+variable "backend_http_settings" {
+  description = "A map of backend HTTP settings configurations."
+  type        = map(object({
+    name                  = string
+    cookie_based_affinity = string
+    port                  = number
+    protocol              = string
+    request_timeout       = number
+  }))
+  default = {}  # Default value is an empty map
+}
+
+variable "request_routing_rules" {
+  description = "A map of request routing rule configurations."
+  type        = map(object({
+    name                = string
+    rule_type           = string
+  }))
+  default = {}  # Default value is an empty map
+}
+
+variable "url_path_map_name" {
+  description = "Name of the URL path map"
+  type        = string
+}
+
+variable "path_rule_name2" {
+  description = "Name of the path rule"
+  type        = string
 }
