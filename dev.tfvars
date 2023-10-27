@@ -78,52 +78,84 @@ profiles = [
 ]
 
 ######################### App Gateway ###############################
-application_gateways = {
-  "appgw1" ={
-    name = "dev-agw-uks-01"
+public_ips = {
+  "pip1" = {
+    name       = "dev-uks-pip-01"
+    sku        = "Standard"
+    allocation = "Static"
   }
-}
-zones = ["1", "2", "3"]
-autoscale_configuration = {
-  min_capacity = "1"
-  max_capacity = "2"
+  # Add more public IPs with their configurations as needed
 }
 
+appgw_name  = "dev-uks-appgw-01"
 
-frontend_ip_configuration_name = "dev-appgw-feip"
-frontend_ip_configuraion = {
-  private_ip_address           = "10.0.0.1",
-  private_ip_address_allocation = "static"
+gateway_ip_config = "dev-uks-gwip-01"
+
+frontend_ip_config = "dev-uks-feip-01"
+
+frontend_ports = {
+  "webserver-port" = {
+    name       = "uks-webserver-port"
+    http_port  = 80
+  }
+  # Add more frontend ports as needed
 }
 
-backend_address_pool = [
-  {
-    name   = "dev-backend-pool-1"
-    ip_addresses = ["10.1.1.1"]
+backend_address_pools = {
+  "pool1" = {
+    name         = "dev-uks-pool1"
+    ip_addresses = ["10.0.0.1", "10.0.0.2"]
+    fqdns        = ["api.example.com", "sample.com"]
   },
-  {
-    name     = "dev-backend-pool-2"
-    fqdn     = "test.com"
+  "pool2" = {
+    name         = "dev-uks-pool2"
+    ip_addresses = ["10.0.0.3", "10.0.0.4"]
+    fqdns        = ["services.example.com", "app.example.com"]
   }
-]
+  # Add more pools as needed
+}
 
-appgw_config = {
-  "listener_dev_1" = {
-    host_name                 = "dev.com"
-    backedn_address_pool_name = "dev-backend-pool"
-    health_probe_path         = "/"
-   }
-  "listener_dev_2" = {
-    host_name                 = "test.com"
-    backend_address_pool_name = "dev-backend-pool"
-    health_probe_path         = "/"
-   }
-  "listener_dev_vm-1 = {
-    host-name                 = "dev.vm.com"
-    backend_address_pool_name = "dev-backend-pool"
-    backend_setting_port      = "8080"
-    health_probe_path         = "/path"
-    request_timeout           = 60
-    timeout                   = 60
-   }
-}  
+http_listener = {
+  "listener-1" = {
+    name                  = "dev-uks-listener-1"
+    protocol              = "Http"
+  }
+  #"listener-2"  = {
+  #  name                  = "dev-uks-listener-2"
+  #  protocol              = "Http"
+  #}
+}
+
+backend_http_settings = {
+  "http-settings-1" = {
+    name                  = "http-settings-1"
+    cookie_based_affinity = "Disabled"
+    port                  = 80
+    protocol              = "Http"
+    request_timeout       = 60
+  }
+  "http-settings-2" = {
+    name                  = "http-settings-2"
+    cookie_based_affinity = "Disabled"
+    port                  = 8080
+    protocol              = "Http"
+    request_timeout       = 45
+  }
+  # Add more backend HTTP settings as needed
+}
+
+request_routing_rules = {
+  #"rule-1" = {
+  #  name                = "dev-uks-rule-1"
+  #  rule_type           = "Basic"
+  #}
+  "rule-2" = {
+    name                = "dev-uks-rule-2"
+    rule_type           = "PathBasedRouting"
+  }
+  # Add more request routing rules as needed
+}
+
+url_path_map_name     = "dev-url-path-map"
+
+path_rule_name2       = "dev-rule-2"
